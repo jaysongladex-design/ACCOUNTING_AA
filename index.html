@@ -3,8 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gladex Travel &amp; Tours — Flights, Tours &amp; Ticketing</title>
-  <meta name="description" content="Gladex Travel and Tours Corp — AirAsia flight bookings, tour packages, and visa assistance. Your trusted travel partner." />
+  <title>Gladex Travel &amp; Tours — Flights, Tours &amp; Ticketing in the Philippines</title>
+  <meta name="description" content="Gladex Travel and Tours Corp — AirAsia flight bookings, Philippine & international tour packages, hotels, and visa assistance. Get a free quote today." />
+
+  <!-- Social sharing preview -->
+  <meta property="og:title" content="Gladex Travel & Tours" />
+  <meta property="og:description" content="Flights, tour packages, hotels & visa assistance. Your trusted travel partner in the Philippines." />
+  <meta property="og:type" content="website" />
+
+  <!-- Favicon (a red airplane, no external file needed) -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E✈%3C/text%3E%3C/svg%3E" />
+
   <style>
     :root {
       --red: #e21a2c;
@@ -19,18 +28,16 @@
     html { scroll-behavior: smooth; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      color: var(--ink);
-      background: var(--bg);
-      line-height: 1.6;
+      color: var(--ink); background: var(--bg); line-height: 1.6;
     }
     a { text-decoration: none; color: inherit; }
     .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    img { max-width: 100%; }
 
     /* Header */
     header {
       position: sticky; top: 0; z-index: 50;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--line);
     }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
@@ -41,24 +48,32 @@
       display: grid; place-items: center; color: #fff; font-size: 18px;
     }
     .brand span.accent { color: var(--red); }
-    .nav-links { display: flex; gap: 28px; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
     .nav-links a { color: var(--muted); font-weight: 500; font-size: .95rem; }
     .nav-links a:hover { color: var(--ink); }
     .btn {
-      display: inline-block; background: var(--red); color: #fff;
+      display: inline-block; background: var(--red); color: #fff; cursor: pointer;
       padding: 11px 22px; border-radius: 10px; font-weight: 600; font-size: .95rem;
-      transition: background .2s, transform .1s;
+      border: none; transition: background .2s, transform .1s;
     }
     .btn:hover { background: var(--red-dark); transform: translateY(-1px); }
     .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
     .btn.ghost:hover { background: var(--soft); }
-    @media (max-width: 720px) { .nav-links { display: none; } }
+    .menu-toggle { display: none; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--ink); }
+    @media (max-width: 760px) {
+      .nav-links {
+        display: none; position: absolute; top: 68px; left: 0; right: 0;
+        flex-direction: column; gap: 0; background: #fff; border-bottom: 1px solid var(--line);
+        padding: 10px 24px 20px;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 12px 0; width: 100%; border-bottom: 1px solid var(--line); }
+      .nav-links .btn { margin-top: 12px; text-align: center; }
+      .menu-toggle { display: block; }
+    }
 
     /* Hero */
-    .hero {
-      background: linear-gradient(160deg, #fff 0%, #fff5f4 60%, #ffe9e6 100%);
-      padding: 84px 0 72px;
-    }
+    .hero { background: linear-gradient(160deg, #fff 0%, #fff5f4 60%, #ffe9e6 100%); padding: 84px 0 72px; }
     .hero h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.1; letter-spacing: -1px; }
     .hero h1 .hl { color: var(--red); }
     .hero p.lead { margin: 20px 0 32px; font-size: 1.15rem; color: var(--muted); max-width: 560px; }
@@ -75,31 +90,69 @@
 
     .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
     @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
-    .card {
-      background: var(--bg); border: 1px solid var(--line); border-radius: 16px;
-      padding: 28px; transition: box-shadow .2s, transform .2s;
-    }
+    .card { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 28px; transition: box-shadow .2s, transform .2s; }
     .card:hover { box-shadow: 0 14px 40px rgba(20,20,40,.08); transform: translateY(-3px); }
     .card .ico { font-size: 30px; margin-bottom: 14px; }
     .card h3 { font-size: 1.2rem; margin-bottom: 8px; }
     .card p { color: var(--muted); font-size: .96rem; }
 
+    /* Destinations */
+    .dest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    @media (max-width: 900px) { .dest-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .dest-grid { grid-template-columns: 1fr; } }
+    .dest {
+      position: relative; border-radius: 16px; overflow: hidden; min-height: 210px;
+      display: flex; align-items: flex-end; color: #fff; padding: 18px;
+      background-size: cover; background-position: center;
+    }
+    .dest::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,.65)); }
+    .dest .dtext { position: relative; z-index: 1; }
+    .dest .dtext b { font-size: 1.15rem; display: block; }
+    .dest .dtext small { opacity: .9; }
+    .d1 { background-image: linear-gradient(135deg,#36d1dc,#5b86e5); }
+    .d2 { background-image: linear-gradient(135deg,#f7971e,#ffd200); }
+    .d3 { background-image: linear-gradient(135deg,#11998e,#38ef7d); }
+    .d4 { background-image: linear-gradient(135deg,#fc5c7d,#6a82fb); }
+    .d5 { background-image: linear-gradient(135deg,#ff512f,#dd2476); }
+    .d6 { background-image: linear-gradient(135deg,#1a2980,#26d0ce); }
+    .d7 { background-image: linear-gradient(135deg,#f12711,#f5af19); }
+    .d8 { background-image: linear-gradient(135deg,#8e2de2,#4a00e0); }
+
+    /* Packages */
     .soft-band { background: var(--soft); }
+    .pkg { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+    .pkg .top { padding: 26px; }
+    .pkg .tag { display: inline-block; background: #fdecee; color: var(--red); font-weight: 600; font-size: .78rem; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; }
+    .pkg h3 { font-size: 1.25rem; }
+    .pkg .price { font-size: 1.7rem; font-weight: 800; margin-top: 10px; }
+    .pkg .price small { font-size: .85rem; color: var(--muted); font-weight: 500; }
+    .pkg ul { list-style: none; margin: 16px 0 0; }
+    .pkg li { padding: 6px 0; color: var(--muted); font-size: .95rem; }
+    .pkg li::before { content: "✓ "; color: var(--red); font-weight: 700; }
+    .pkg .foot { margin-top: auto; padding: 0 26px 26px; }
+    .pkg .btn { width: 100%; text-align: center; }
+
+    /* Why */
     .why { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     @media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
     .why .item { display: flex; gap: 14px; align-items: flex-start; }
     .why .check { color: var(--red); font-size: 22px; line-height: 1; }
 
-    /* Contact */
-    .contact-box {
-      background: linear-gradient(135deg, var(--ink), #2d2d55);
-      color: #fff; border-radius: 22px; padding: 48px; text-align: center;
+    /* Contact / form */
+    .contact-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+    @media (max-width: 860px) { .contact-wrap { grid-template-columns: 1fr; } }
+    .contact-info h2 { margin-bottom: 12px; }
+    .contact-info .line { display: flex; gap: 12px; align-items: center; margin: 14px 0; color: var(--muted); }
+    .contact-info .line b { color: var(--ink); }
+    form.quote { background: var(--soft); border: 1px solid var(--line); border-radius: 18px; padding: 30px; }
+    form.quote label { display: block; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
+    form.quote input, form.quote select, form.quote textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+      font-family: inherit; font-size: .95rem; background: #fff;
     }
-    .contact-box h2 { color: #fff; }
-    .contact-box p { color: #c9c9e0; max-width: 520px; margin: 12px auto 26px; }
-    .contact-box .btn { background: var(--red); }
-    .contact-box .btn:hover { background: var(--red-dark); }
-    .contact-meta { margin-top: 22px; color: #b8b8d4; font-size: .95rem; }
+    form.quote input:focus, form.quote select:focus, form.quote textarea:focus { outline: 2px solid var(--red); border-color: transparent; }
+    form.quote .btn { width: 100%; margin-top: 20px; padding: 14px; font-size: 1rem; }
+    form.quote .note { font-size: .8rem; color: var(--muted); margin-top: 12px; text-align: center; }
 
     /* Footer */
     footer { border-top: 1px solid var(--line); padding: 34px 0; color: var(--muted); font-size: .9rem; }
@@ -114,12 +167,14 @@
         <span class="logo">✈</span>
         <span>Gladex <span class="accent">Travel &amp; Tours</span></span>
       </div>
-      <nav class="nav-links">
-        <a href="#services">Services</a>
-        <a href="#why">Why Us</a>
-        <a href="#contact">Contact</a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#destinations" onclick="closeMenu()">Destinations</a>
+        <a href="#packages" onclick="closeMenu()">Packages</a>
+        <a href="#services" onclick="closeMenu()">Services</a>
+        <a href="#contact" onclick="closeMenu()">Contact</a>
+        <a href="#contact" class="btn" onclick="closeMenu()">Book Now</a>
       </nav>
-      <a href="#contact" class="btn">Book Now</a>
+      <button class="menu-toggle" aria-label="Menu" onclick="toggleMenu()">☰</button>
     </div>
   </header>
 
@@ -127,18 +182,87 @@
   <section class="hero">
     <div class="container">
       <h1>Your journey begins with <span class="hl">Gladex</span>.</h1>
-      <p class="lead">
-        Flight bookings, curated tour packages, and hassle-free ticketing —
-        all handled by a travel team you can trust.
-      </p>
+      <p class="lead">Flight bookings, curated tour packages, and hassle-free ticketing across the Philippines and beyond — handled by a travel team you can trust.</p>
       <div class="hero-cta">
         <a href="#contact" class="btn">Plan My Trip</a>
-        <a href="#services" class="btn ghost">Explore Services</a>
+        <a href="#packages" class="btn ghost">View Packages</a>
       </div>
       <div class="stats">
         <div class="stat"><b>500+</b><small>Happy travelers</small></div>
         <div class="stat"><b>50+</b><small>Destinations</small></div>
         <div class="stat"><b>24/7</b><small>Support</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DESTINATIONS -->
+  <section class="pad" id="destinations">
+    <div class="container">
+      <p class="eyebrow">Popular destinations</p>
+      <h2 class="title">Where do you want to go?</h2>
+      <p class="section-intro">Local favorites and international getaways, all bookable through Gladex.</p>
+      <div class="dest-grid">
+        <div class="dest d1"><div class="dtext"><b>Boracay</b><small>from ₱6,999</small></div></div>
+        <div class="dest d2"><div class="dtext"><b>Palawan</b><small>from ₱8,499</small></div></div>
+        <div class="dest d3"><div class="dtext"><b>Cebu &amp; Bohol</b><small>from ₱5,999</small></div></div>
+        <div class="dest d4"><div class="dtext"><b>Siargao</b><small>from ₱7,499</small></div></div>
+        <div class="dest d5"><div class="dtext"><b>Hong Kong</b><small>from ₱12,999</small></div></div>
+        <div class="dest d6"><div class="dtext"><b>Singapore</b><small>from ₱15,999</small></div></div>
+        <div class="dest d7"><div class="dtext"><b>Japan</b><small>from ₱24,999</small></div></div>
+        <div class="dest d8"><div class="dtext"><b>South Korea</b><small>from ₱21,999</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PACKAGES -->
+  <section class="pad soft-band" id="packages">
+    <div class="container">
+      <p class="eyebrow">Featured deals</p>
+      <h2 class="title">Tour packages</h2>
+      <p class="section-intro">All-in packages that take the guesswork out of planning. Prices are per person, sample rates — ask us for today's exact quote.</p>
+      <div class="grid">
+        <div class="pkg">
+          <div class="top">
+            <span class="tag">Beach getaway</span>
+            <h3>Boracay 3D2N</h3>
+            <div class="price">₱6,999 <small>/ person</small></div>
+            <ul>
+              <li>Round-trip AirAsia flights</li>
+              <li>2 nights hotel accommodation</li>
+              <li>Airport &amp; island transfers</li>
+              <li>Daily breakfast</li>
+            </ul>
+          </div>
+          <div class="foot"><a href="#contact" class="btn">Book this deal</a></div>
+        </div>
+        <div class="pkg">
+          <div class="top">
+            <span class="tag">Island adventure</span>
+            <h3>Palawan 4D3N</h3>
+            <div class="price">₱8,499 <small>/ person</small></div>
+            <ul>
+              <li>Round-trip flights</li>
+              <li>3 nights accommodation</li>
+              <li>Island hopping tour</li>
+              <li>All transfers included</li>
+            </ul>
+          </div>
+          <div class="foot"><a href="#contact" class="btn">Book this deal</a></div>
+        </div>
+        <div class="pkg">
+          <div class="top">
+            <span class="tag">International</span>
+            <h3>Hong Kong 4D3N</h3>
+            <div class="price">₱12,999 <small>/ person</small></div>
+            <ul>
+              <li>Round-trip flights</li>
+              <li>3 nights hotel stay</li>
+              <li>Disneyland day pass</li>
+              <li>City tour + transfers</li>
+            </ul>
+          </div>
+          <div class="foot"><a href="#contact" class="btn">Book this deal</a></div>
+        </div>
       </div>
     </div>
   </section>
@@ -150,36 +274,12 @@
       <h2 class="title">Everything for your next trip</h2>
       <p class="section-intro">From booking the cheapest fares to planning full itineraries — we take care of it all.</p>
       <div class="grid">
-        <div class="card">
-          <div class="ico">🎫</div>
-          <h3>Flight Ticketing</h3>
-          <p>Book domestic and international flights, including AirAsia, at the best available fares.</p>
-        </div>
-        <div class="card">
-          <div class="ico">🏝️</div>
-          <h3>Tour Packages</h3>
-          <p>Ready-made and custom tour packages for families, groups, and solo adventurers.</p>
-        </div>
-        <div class="card">
-          <div class="ico">🛂</div>
-          <h3>Visa Assistance</h3>
-          <p>Guidance and document support to make your visa application smooth and stress-free.</p>
-        </div>
-        <div class="card">
-          <div class="ico">🏨</div>
-          <h3>Hotel Booking</h3>
-          <p>Comfortable stays at great rates, hand-picked to match your destination and budget.</p>
-        </div>
-        <div class="card">
-          <div class="ico">🚐</div>
-          <h3>Airport Transfers</h3>
-          <p>Reliable pick-up and drop-off so you travel from door to gate without the stress.</p>
-        </div>
-        <div class="card">
-          <div class="ico">📄</div>
-          <h3>Travel Insurance</h3>
-          <p>Protect your trip with coverage options for delays, cancellations, and emergencies.</p>
-        </div>
+        <div class="card"><div class="ico">🎫</div><h3>Flight Ticketing</h3><p>Domestic and international flights, including AirAsia, at the best available fares.</p></div>
+        <div class="card"><div class="ico">🏝️</div><h3>Tour Packages</h3><p>Ready-made and custom packages for families, groups, and solo adventurers.</p></div>
+        <div class="card"><div class="ico">🛂</div><h3>Visa Assistance</h3><p>Guidance and document support to make your visa application smooth and stress-free.</p></div>
+        <div class="card"><div class="ico">🏨</div><h3>Hotel Booking</h3><p>Comfortable stays at great rates, matched to your destination and budget.</p></div>
+        <div class="card"><div class="ico">🚐</div><h3>Airport Transfers</h3><p>Reliable pick-up and drop-off so you travel door to gate without the stress.</p></div>
+        <div class="card"><div class="ico">📄</div><h3>Travel Insurance</h3><p>Coverage options for delays, cancellations, and emergencies.</p></div>
       </div>
     </div>
   </section>
@@ -202,11 +302,31 @@
   <!-- CONTACT -->
   <section class="pad" id="contact">
     <div class="container">
-      <div class="contact-box">
-        <h2 class="title">Ready to book your next trip?</h2>
-        <p>Tell us where you want to go and we'll take care of the rest. Get a free quote today.</p>
-        <a href="mailto:glady.bolasa@pinoyonlinebiz.com?subject=Travel%20Inquiry" class="btn">Get a Free Quote</a>
-        <div class="contact-meta">📧 glady.bolasa@pinoyonlinebiz.com</div>
+      <div class="contact-wrap">
+        <div class="contact-info">
+          <p class="eyebrow">Get in touch</p>
+          <h2 class="title">Ready to book your trip?</h2>
+          <p style="color:var(--muted)">Tell us where you want to go and we'll send you a free, no-obligation quote.</p>
+          <div class="line">📧 <span><b>Email</b><br>glady.bolasa@pinoyonlinebiz.com</span></div>
+          <div class="line">📞 <span><b>Phone</b><br>+63 9XX XXX XXXX <em>(add your number)</em></span></div>
+          <div class="line">📍 <span><b>Office</b><br>Philippines <em>(add your address)</em></span></div>
+        </div>
+        <form class="quote" onsubmit="return sendInquiry(event)">
+          <label for="name">Full name</label>
+          <input id="name" type="text" required placeholder="Juan dela Cruz" />
+          <label for="email">Email</label>
+          <input id="email" type="email" required placeholder="you@email.com" />
+          <label for="dest">Destination</label>
+          <select id="dest">
+            <option>Boracay</option><option>Palawan</option><option>Cebu &amp; Bohol</option>
+            <option>Siargao</option><option>Hong Kong</option><option>Singapore</option>
+            <option>Japan</option><option>South Korea</option><option>Other / Not sure yet</option>
+          </select>
+          <label for="msg">Message</label>
+          <textarea id="msg" rows="3" placeholder="Travel dates, number of travelers, etc."></textarea>
+          <button type="submit" class="btn">Send Inquiry</button>
+          <p class="note">Opens your email app with the details pre-filled.</p>
+        </form>
       </div>
     </div>
   </section>
@@ -217,6 +337,29 @@
       <div>Made with ✈ by Gladex</div>
     </div>
   </footer>
+
+  <script>
+    function toggleMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+    function closeMenu() { document.getElementById('navLinks').classList.remove('open'); }
+
+    function sendInquiry(e) {
+      e.preventDefault();
+      var name = document.getElementById('name').value;
+      var email = document.getElementById('email').value;
+      var dest = document.getElementById('dest').value;
+      var msg = document.getElementById('msg').value;
+      var subject = 'Travel Inquiry — ' + dest;
+      var body =
+        'Name: ' + name + '\n' +
+        'Email: ' + email + '\n' +
+        'Destination: ' + dest + '\n\n' +
+        'Message:\n' + msg;
+      window.location.href = 'mailto:glady.bolasa@pinoyonlinebiz.com'
+        + '?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(body);
+      return false;
+    }
+  </script>
 
 </body>
 </html>
