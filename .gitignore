@@ -1,0 +1,27 @@
+# --- Secrets & settings (never upload these) ---
+.env
+*.key
+*.pem
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual environments ---
+venv/
+env/
+.venv/
+
+# --- Logs & data output ---
+logs/*.log
+data/output/
+
+# --- Editor / OS junk ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

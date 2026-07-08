@@ -1,0 +1,14 @@
+# Python packages this project uses.
+# Install them all with:  pip install -r requirements.txt
+
+# Loads settings from a .env file
+python-dotenv>=1.0.0
+
+# For making web requests (APIs, downloading data)
+requests>=2.31.0
+
+# --- Uncomment the ones you need as the project grows ---
+# beautifulsoup4>=4.12.0   # Reading/parsing websites (web scraping)
+# pandas>=2.0.0            # Working with spreadsheets / tables of data
+# openpyxl>=3.1.0          # Reading & writing Excel files
+# selenium>=4.15.0         # Controlling a real browser (automation)
