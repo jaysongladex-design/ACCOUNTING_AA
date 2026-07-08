@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gladex Travel &amp; Tours — Flights, Tours &amp; Ticketing</title>
+  <meta name="description" content="Gladex Travel and Tours Corp — AirAsia flight bookings, tour packages, and visa assistance. Your trusted travel partner." />
+  <style>
+    :root {
+      --red: #e21a2c;
+      --red-dark: #b5121f;
+      --ink: #1a1a2e;
+      --muted: #5a5a6e;
+      --bg: #ffffff;
+      --soft: #f6f7fb;
+      --line: #e6e8ef;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; }
+    .brand .logo {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--red), #ff6a3d);
+      display: grid; place-items: center; color: #fff; font-size: 18px;
+    }
+    .brand span.accent { color: var(--red); }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { color: var(--muted); font-weight: 500; font-size: .95rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .btn {
+      display: inline-block; background: var(--red); color: #fff;
+      padding: 11px 22px; border-radius: 10px; font-weight: 600; font-size: .95rem;
+      transition: background .2s, transform .1s;
+    }
+    .btn:hover { background: var(--red-dark); transform: translateY(-1px); }
+    .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+    .btn.ghost:hover { background: var(--soft); }
+    @media (max-width: 720px) { .nav-links { display: none; } }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(160deg, #fff 0%, #fff5f4 60%, #ffe9e6 100%);
+      padding: 84px 0 72px;
+    }
+    .hero h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.1; letter-spacing: -1px; }
+    .hero h1 .hl { color: var(--red); }
+    .hero p.lead { margin: 20px 0 32px; font-size: 1.15rem; color: var(--muted); max-width: 560px; }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stats { display: flex; gap: 40px; margin-top: 48px; flex-wrap: wrap; }
+    .stat b { display: block; font-size: 1.8rem; color: var(--ink); }
+    .stat small { color: var(--muted); }
+
+    /* Sections */
+    section.pad { padding: 76px 0; }
+    .eyebrow { color: var(--red); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: .8rem; }
+    h2.title { font-size: clamp(1.7rem, 3.5vw, 2.4rem); letter-spacing: -.5px; margin: 8px 0 10px; }
+    .section-intro { color: var(--muted); max-width: 620px; margin-bottom: 44px; }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--bg); border: 1px solid var(--line); border-radius: 16px;
+      padding: 28px; transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover { box-shadow: 0 14px 40px rgba(20,20,40,.08); transform: translateY(-3px); }
+    .card .ico { font-size: 30px; margin-bottom: 14px; }
+    .card h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .card p { color: var(--muted); font-size: .96rem; }
+
+    .soft-band { background: var(--soft); }
+    .why { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
+    .why .item { display: flex; gap: 14px; align-items: flex-start; }
+    .why .check { color: var(--red); font-size: 22px; line-height: 1; }
+
+    /* Contact */
+    .contact-box {
+      background: linear-gradient(135deg, var(--ink), #2d2d55);
+      color: #fff; border-radius: 22px; padding: 48px; text-align: center;
+    }
+    .contact-box h2 { color: #fff; }
+    .contact-box p { color: #c9c9e0; max-width: 520px; margin: 12px auto 26px; }
+    .contact-box .btn { background: var(--red); }
+    .contact-box .btn:hover { background: var(--red-dark); }
+    .contact-meta { margin-top: 22px; color: #b8b8d4; font-size: .95rem; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--line); padding: 34px 0; color: var(--muted); font-size: .9rem; }
+    .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <span class="logo">✈</span>
+        <span>Gladex <span class="accent">Travel &amp; Tours</span></span>
+      </div>
+      <nav class="nav-links">
+        <a href="#services">Services</a>
+        <a href="#why">Why Us</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <a href="#contact" class="btn">Book Now</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <h1>Your journey begins with <span class="hl">Gladex</span>.</h1>
+      <p class="lead">
+        Flight bookings, curated tour packages, and hassle-free ticketing —
+        all handled by a travel team you can trust.
+      </p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn">Plan My Trip</a>
+        <a href="#services" class="btn ghost">Explore Services</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>500+</b><small>Happy travelers</small></div>
+        <div class="stat"><b>50+</b><small>Destinations</small></div>
+        <div class="stat"><b>24/7</b><small>Support</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="pad" id="services">
+    <div class="container">
+      <p class="eyebrow">What we offer</p>
+      <h2 class="title">Everything for your next trip</h2>
+      <p class="section-intro">From booking the cheapest fares to planning full itineraries — we take care of it all.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ico">🎫</div>
+          <h3>Flight Ticketing</h3>
+          <p>Book domestic and international flights, including AirAsia, at the best available fares.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🏝️</div>
+          <h3>Tour Packages</h3>
+          <p>Ready-made and custom tour packages for families, groups, and solo adventurers.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🛂</div>
+          <h3>Visa Assistance</h3>
+          <p>Guidance and document support to make your visa application smooth and stress-free.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🏨</div>
+          <h3>Hotel Booking</h3>
+          <p>Comfortable stays at great rates, hand-picked to match your destination and budget.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🚐</div>
+          <h3>Airport Transfers</h3>
+          <p>Reliable pick-up and drop-off so you travel from door to gate without the stress.</p>
+        </div>
+        <div class="card">
+          <div class="ico">📄</div>
+          <h3>Travel Insurance</h3>
+          <p>Protect your trip with coverage options for delays, cancellations, and emergencies.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <section class="pad soft-band" id="why">
+    <div class="container">
+      <p class="eyebrow">Why Gladex</p>
+      <h2 class="title">Travel made simple</h2>
+      <p class="section-intro">We handle the details so you can focus on the experience.</p>
+      <div class="why">
+        <div class="item"><span class="check">✓</span><div><strong>Best-price guarantee</strong><br><span style="color:var(--muted)">We hunt down the lowest fares and package deals for you.</span></div></div>
+        <div class="item"><span class="check">✓</span><div><strong>Licensed &amp; trusted</strong><br><span style="color:var(--muted)">A registered travel and tours corporation you can rely on.</span></div></div>
+        <div class="item"><span class="check">✓</span><div><strong>24/7 personal support</strong><br><span style="color:var(--muted)">Real people ready to help before, during, and after your trip.</span></div></div>
+        <div class="item"><span class="check">✓</span><div><strong>Tailored itineraries</strong><br><span style="color:var(--muted)">Every trip planned around your dates, budget, and style.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="pad" id="contact">
+    <div class="container">
+      <div class="contact-box">
+        <h2 class="title">Ready to book your next trip?</h2>
+        <p>Tell us where you want to go and we'll take care of the rest. Get a free quote today.</p>
+        <a href="mailto:glady.bolasa@pinoyonlinebiz.com?subject=Travel%20Inquiry" class="btn">Get a Free Quote</a>
+        <div class="contact-meta">📧 glady.bolasa@pinoyonlinebiz.com</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container foot">
+      <div>© 2026 Gladex Travel and Tours Corp. All rights reserved.</div>
+      <div>Made with ✈ by Gladex</div>
+    </div>
+  </footer>
+
+</body>
+</html>

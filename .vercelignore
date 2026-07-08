@@ -1,0 +1,8 @@
+# Tell Vercel to ignore these when building the WEBSITE.
+# (These files stay in your GitHub repo — they're just not part of the site.)
+# Excluding them stops Vercel from mistaking this for a Python backend.
+src/
+tests/
+requirements.txt
+*.py
+.env.example

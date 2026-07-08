@@ -4,8 +4,16 @@ An automation project by **GladexAutomate**.
 
 ## What is this?
 
-This is the starting structure for the AirAsia automation project. Add your
-scripts and logic inside the `src/` folder and run everything from `src/main.py`.
+This project has two parts:
+
+1. **The website** (`index.html`) — the public Gladex Travel & Tours site,
+   deployed automatically to **Vercel** every time you push to GitHub.
+2. **Optional automation scripts** (`src/` folder) — Python code for behind-the-
+   scenes tasks. These are **not** part of the website (Vercel ignores them via
+   `.vercelignore`).
+
+To change the website, edit `index.html`, then commit and push — Vercel
+redeploys it live in a few seconds.
 
 ## Folder structure
 
