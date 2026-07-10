@@ -436,9 +436,13 @@ function ingestAOA(aoa){
   S.hasCategory = C.category!=null;
 
   const rows=[];
+  let currentDate=null, sawDate=false;   // the day's date sits on its own "day-header" row — carry it down
   for(let i=best.row+1;i<aoa.length;i++){
     const r=aoa[i];
     if(!r||!r.length)continue;
+    // Day-header row: holds a real Date (e.g. 1-Jul-2023). Remember it for the transactions beneath it.
+    const dCell=r.find(c=> c instanceof Date && !isNaN(c.getTime()));
+    if(dCell){ currentDate=dCell; sawDate=true; continue; }
     // skip repeated header rows
     const sig=r.map(c=>norm(c)).filter(Boolean);
     if(sig.length && sig.every(v=>headerSig.has(v)) && sig.length>2) continue;
@@ -448,7 +452,8 @@ function ingestAOA(aoa){
     if(rawVal===''||rawVal==null||isNaN(parseFloat(String(rawVal).replace(/[^0-9.\-]/g,''))))continue;
     const agency = C.agency!=null? r[C.agency] : '';
     if(agency===''||agency==null)continue;
-    const dt = C.date!=null? parseDate(r[C.date]) : null;
+    // Prefer the carried-down day date; fall back to a real date in a date column if present.
+    const dt = currentDate || (C.date!=null? parseDate(r[C.date]) : null);
     rows.push({
       _i:rows.length,
       agency: agency,
@@ -463,6 +468,7 @@ function ingestAOA(aoa){
     });
   }
   if(!rows.length){ alert('No transaction rows were found after the header.'); return; }
+  S.hasDate = sawDate;   // real dates come from the day-header rows, not a per-row column
   finishLoad(rows);
 }
 
