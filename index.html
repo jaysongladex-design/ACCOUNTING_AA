@@ -250,6 +250,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <!-- FILTERS -->
     <div class="section-title">Filters</div>
     <div class="filters" id="filters">
+      <div class="field" id="fld-year"><label>Year</label><select id="fYear"></select></div>
       <div class="field" id="fld-date"><label>Date From</label>
         <input type="date" id="fDateFrom"></div>
       <div class="field" id="fld-date2"><label>Date To</label>
@@ -257,8 +258,6 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
       <div class="field"><label>User Code</label><select id="fUser"></select></div>
       <div class="field"><label>Transaction Type</label><select id="fType"></select></div>
       <div class="field"><label>Category</label><select id="fCategory"></select></div>
-      <div class="field"><label>Currency</label><select id="fCurrency"></select></div>
-      <div class="field"><label>Agency Code</label><select id="fAgency"></select></div>
       <div class="field"><label>Flow</label><select id="fFlow">
         <option value="">All</option><option value="Credit">Credits only</option><option value="Debit">Debits only</option>
       </select></div>
@@ -272,13 +271,6 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <div class="section-title">Visual Analytics</div>
     <div class="chart-grid">
       <div class="chart-card wide"><h3>Transaction Value Trend</h3><div class="chart-sub" id="trendSub">Signed value per transaction in sequence</div><div class="chart-wrap"><canvas id="chTrend"></canvas></div></div>
-      <div class="chart-card"><h3 id="dailyTitle">Daily Transaction Count</h3><div class="chart-sub" id="dailySub">Number of transactions per day</div><div class="chart-wrap"><canvas id="chDaily"></canvas></div></div>
-      <div class="chart-card"><h3 id="monthlyTitle">Monthly Transaction Value</h3><div class="chart-sub" id="monthlySub">Total absolute value per month</div><div class="chart-wrap"><canvas id="chMonthly"></canvas></div></div>
-      <div class="chart-card"><h3>Top Users by Transaction Amount</h3><div class="chart-sub">Sum of absolute value handled</div><div class="chart-wrap"><canvas id="chTopAmt"></canvas></div></div>
-      <div class="chart-card"><h3>Top Users by Number of Transactions</h3><div class="chart-sub">Transaction count per user</div><div class="chart-wrap"><canvas id="chTopCnt"></canvas></div></div>
-      <div class="chart-card wide"><h3>Wallet Balance Trend</h3><div class="chart-sub">Remaining Balance across transaction sequence</div><div class="chart-wrap tall"><canvas id="chWallet"></canvas></div></div>
-      <div class="chart-card wide"><h3>Running Balance (Computed)</h3><div class="chart-sub">Cumulative net of credits &amp; debits from a zero baseline</div><div class="chart-wrap tall"><canvas id="chRunning"></canvas></div></div>
-      <div class="chart-card"><h3>Currency Distribution</h3><div class="chart-sub">Transactions per currency</div><div class="chart-wrap"><canvas id="chCurrency"></canvas></div></div>
     </div>
 
     <!-- INSIGHTS -->
@@ -559,8 +551,6 @@ function uniq(key){ return [...new Set(S.raw.map(r=>r[key]).filter(v=>v!==''&&v!
 function buildFilterOptions(){
   fillSelect($('fUser'),uniq('user'),'Users');
   fillSelect($('fType'),uniq('type'),'Types');
-  fillSelect($('fCurrency'),uniq('currency'),'Currencies');
-  fillSelect($('fAgency'),uniq('agency'),'Agencies');
 
   // Category filter
   const catField=$('fCategory').closest('.field');
@@ -571,7 +561,16 @@ function buildFilterOptions(){
     catField.classList.add('hidden');
   }
 
-  // Year filter removed — this dataset has no usable date column, so it can't filter by year.
+  // Year filter - real years when the data has dates, else a static fallback list
+  const yearField=$('fld-year');
+  const years=[...new Set(S.raw.filter(r=>r.date).map(r=>r.date.getFullYear()))].sort();
+  if(S.hasDate && years.length){
+    $('fYear').innerHTML=`<option value="">All Years</option>`+years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }else{
+    const staticYears=[2022,2023,2024,2025,2026];
+    $('fYear').innerHTML=`<option value="">All Years</option>`+staticYears.map(y=>`<option value="${y}">${y}</option>`).join('');
+  }
+  yearField.classList.remove('hidden');
 
   const dateFields=[$('fld-date'),$('fld-date2')];
   if(S.hasDate){
@@ -601,8 +600,8 @@ function showDateNotice(){
    FILTERING
 ============================================================ */
 function applyFilters(){
-  const u=$('fUser').value, t=$('fType').value, c=$('fCurrency').value,
-        a=$('fAgency').value, fl=$('fFlow').value, cat=$('fCategory').value;
+  const u=$('fUser').value, t=$('fType').value, cat=$('fCategory').value,
+        fl=$('fFlow').value, yr=$('fYear').value;
   let from=null,to=null;
   if(S.hasDate){
     from=$('fDateFrom').value?new Date($('fDateFrom').value+'T00:00:00'):null;
@@ -612,9 +611,8 @@ function applyFilters(){
     if(u&&r.user!==u)return false;
     if(t&&r.type!==t)return false;
     if(cat&&r.category!==cat)return false;
-    if(c&&r.currency!==c)return false;
-    if(a&&String(r.agency)!==a)return false;
     if(fl&&r.flow!==fl)return false;
+    if(yr&&S.hasDate&&(!r.date||r.date.getFullYear()!=yr))return false;
     if(from&&(!r.date||r.date<from))return false;
     if(to&&(!r.date||r.date>to))return false;
     return true;
@@ -753,13 +751,7 @@ function renderCharts(){
   destroyCharts();
   const rows=S.filtered;
 
-  /* typeCnt kept — still used by the no-date fallback chart further below.
-     ("Transactions by Type" chart removed per request.) */
-  const typeCnt={}; rows.forEach(r=>{const t=r.type||'(blank)';typeCnt[t]=(typeCnt[t]||0)+1;});
-
-  /* "Transaction Distribution" chart removed per request. */
-
-  /* 3. Transaction Value Trend (signed, sequence or date) */
+  /* Transaction Value Trend — the only chart kept (per request) */
   const seq=[...rows].sort((a,b)=> S.hasDate&&a.date&&b.date? a.date-b.date : a._i-b._i);
   const trendLabels=seq.map((r,i)=> S.hasDate&&r.date? dayKey(r.date) : (i+1));
   S.charts.trend=new Chart($('chTrend'),{type:'line',
@@ -768,80 +760,8 @@ function renderCharts(){
     options:baseOpts()});
   $('trendSub').textContent = S.hasDate? 'Signed value per transaction over time (credits +, debits −)':'Signed value per transaction in sequence (credits +, debits −)';
 
-  /* 4. Daily count  OR  per-type count fallback */
-  if(S.hasDate){
-    const dc={}; rows.forEach(r=>{if(r.date){const k=dayKey(r.date);dc[k]=(dc[k]||0)+1;}});
-    const de=Object.entries(dc).sort((a,b)=>a[0]<b[0]?-1:1);
-    S.charts.daily=new Chart($('chDaily'),{type:'bar',
-      data:{labels:de.map(e=>e[0]),datasets:[{label:'Transactions',data:de.map(e=>e[1]),backgroundColor:AA_RED,borderRadius:4}]},
-      options:baseOpts({plugins:{legend:{display:false}}})});
-    $('dailyTitle').textContent='Daily Transaction Count'; $('dailySub').textContent='Number of transactions per day';
-  }else{
-    // fallback: flow split by type
-    const cE=Object.entries(typeCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    S.charts.daily=new Chart($('chDaily'),{type:'bar',
-      data:{labels:cE.map(e=>e[0]),datasets:[{label:'Transactions',data:cE.map(e=>e[1]),
-        backgroundColor:cE.map(e=>S.creditTypes.has(e[0])?GREEN:AA_RED),borderRadius:4}]},
-      options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}}})});
-    $('dailyTitle').textContent='Transaction Count by Type'; $('dailySub').textContent='No date column — showing count per type (green=credit, red=debit)';
-  }
-
-  /* 5. Monthly value OR per-user value fallback */
-  if(S.hasDate){
-    const mv={}; rows.forEach(r=>{if(r.date){const k=monKey(r.date);mv[k]=(mv[k]||0)+Math.abs(r.value);}});
-    const me=Object.entries(mv).sort((a,b)=>a[0]<b[0]?-1:1);
-    S.charts.monthly=new Chart($('chMonthly'),{type:'bar',
-      data:{labels:me.map(e=>e[0]),datasets:[{label:'Total value',data:me.map(e=>e[1]),backgroundColor:DARK,borderRadius:4}]},
-      options:baseOpts({plugins:{legend:{display:false}}})});
-    $('monthlyTitle').textContent='Monthly Transaction Value'; $('monthlySub').textContent='Total absolute value per month';
-  }else{
-    const uv={}; rows.forEach(r=>{uv[r.user]=(uv[r.user]||0)+Math.abs(r.value);});
-    const ue=Object.entries(uv).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    S.charts.monthly=new Chart($('chMonthly'),{type:'bar',
-      data:{labels:ue.map(e=>e[0]),datasets:[{label:'Total value',data:ue.map(e=>e[1]),backgroundColor:DARK,borderRadius:4}]},
-      options:baseOpts({plugins:{legend:{display:false}}})});
-    $('monthlyTitle').textContent='Value by User'; $('monthlySub').textContent='No date column — showing total value per user';
-  }
-
-  /* 6. Top users by amount */
-  const uAmt={}; rows.forEach(r=>{uAmt[r.user]=(uAmt[r.user]||0)+Math.abs(r.value);});
-  const ua=Object.entries(uAmt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  S.charts.topAmt=new Chart($('chTopAmt'),{type:'bar',
-    data:{labels:ua.map(e=>e[0]),datasets:[{label:'Total value',data:ua.map(e=>e[1]),backgroundColor:AA_RED,borderRadius:5}]},
-    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}}})});
-
-  /* 7. Top users by count */
-  const uCnt={}; rows.forEach(r=>{uCnt[r.user]=(uCnt[r.user]||0)+1;});
-  const uc=Object.entries(uCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  S.charts.topCnt=new Chart($('chTopCnt'),{type:'bar',
-    data:{labels:uc.map(e=>e[0]),datasets:[{label:'Transactions',data:uc.map(e=>e[1]),backgroundColor:'#2f7ed8',borderRadius:5}]},
-    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}}})});
-
-  /* 8. Wallet balance trend (Remaining Balance) */
-  const walletRows=seq.filter(r=>r.balance!=null);
-  const walletData = walletRows.length? walletRows : seq; // fallback to running
-  S.charts.wallet=new Chart($('chWallet'),{type:'line',
-    data:{labels:walletData.map((r,i)=>S.hasDate&&r.date?dayKey(r.date):(i+1)),
-      datasets:[{label:walletRows.length?'Remaining Balance':'Running Balance',
-        data:walletData.map(r=>walletRows.length?r.balance:r.running),
-        borderColor:GREEN,backgroundColor:'rgba(26,156,102,.10)',fill:true,tension:.2,
-        pointRadius:walletData.length>60?0:2,borderWidth:2}]},
-    options:baseOpts()});
-
-  /* 9. Running balance computed */
-  S.charts.running=new Chart($('chRunning'),{type:'line',
-    data:{labels:seq.map((r,i)=>S.hasDate&&r.date?dayKey(r.date):(i+1)),
-      datasets:[{label:'Cumulative net',data:(function(){let x=0;return seq.map(r=>{x+=r.signed;return x;});})(),
-        borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.08)',fill:true,tension:.2,
-        pointRadius:seq.length>60?0:2,borderWidth:2}]},
-    options:baseOpts()});
-
-  /* 10. Currency distribution */
-  const cc={}; rows.forEach(r=>{const k=r.currency||'(none)';cc[k]=(cc[k]||0)+1;});
-  const ce=Object.entries(cc).sort((a,b)=>b[1]-a[1]);
-  S.charts.currency=new Chart($('chCurrency'),{type:'pie',
-    data:{labels:ce.map(e=>e[0]),datasets:[{data:ce.map(e=>e[1]),backgroundColor:ce.map((_,i)=>PALETTE[i%PALETTE.length]),borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:tickColor()}}}}});
+  /* Daily, Monthly, Top-Users (amount & count), Wallet Balance, Running Balance,
+     and Currency Distribution charts removed per request — only the trend remains. */
 }
 
 /* ---------- TABLE ---------- */
@@ -950,10 +870,10 @@ const dz=$('dropzone');
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
 dz.addEventListener('drop',e=>{ if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]); });
 
-['fUser','fType','fCategory','fCurrency','fAgency','fFlow'].forEach(id=>$(id).onchange=applyFilters);
+['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).onchange=applyFilters);
 ['fDateFrom','fDateTo'].forEach(id=>$(id).onchange=applyFilters);
 $('resetFilters').onclick=()=>{
-  ['fUser','fType','fCategory','fCurrency','fAgency','fFlow'].forEach(id=>$(id).value='');
+  ['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).value='');
   buildFilterOptions();
   applyFilters();
 };
