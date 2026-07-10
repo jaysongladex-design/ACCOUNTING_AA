@@ -580,9 +580,11 @@ function buildFilterOptions(){
     $('fYear').innerHTML=`<option value="">All Years</option>`+years.map(y=>`<option value="${y}">${y}</option>`).join('');
     yearField.classList.remove('hidden');
   }else{
-    // keep visible but disabled with an explanatory placeholder
-    $('fYear').disabled=true;
-    $('fYear').innerHTML=`<option value="">No dates in file</option>`;
+    // No date column in the data — still show selectable Year choices.
+    // (These won't actually filter rows until the uploaded file has a date column.)
+    $('fYear').disabled=false;
+    const staticYears=[2022,2023,2024,2025,2026];
+    $('fYear').innerHTML=`<option value="">All Years</option>`+staticYears.map(y=>`<option value="${y}">${y}</option>`).join('');
     yearField.classList.remove('hidden');
   }
 
@@ -629,7 +631,7 @@ function applyFilters(){
     if(c&&r.currency!==c)return false;
     if(a&&String(r.agency)!==a)return false;
     if(fl&&r.flow!==fl)return false;
-    if(yr&&(!r.date||r.date.getFullYear()!=yr))return false;
+    if(yr&&S.hasDate&&(!r.date||r.date.getFullYear()!=yr))return false;
     if(from&&(!r.date||r.date<from))return false;
     if(to&&(!r.date||r.date>to))return false;
     return true;
