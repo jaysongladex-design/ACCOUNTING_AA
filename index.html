@@ -776,14 +776,25 @@ function renderCharts(){
 
   /* "Transaction Distribution" chart removed per request. */
 
-  /* 3. Transaction Value Trend (signed, sequence or date) */
+  /* 3. Transaction Value Trend — grouped PER YEAR when dates exist, else per-transaction sequence */
   const seq=[...rows].sort((a,b)=> S.hasDate&&a.date&&b.date? a.date-b.date : a._i-b._i);
-  const trendLabels=seq.map((r,i)=> S.hasDate&&r.date? dayKey(r.date) : (i+1));
-  S.charts.trend=new Chart($('chTrend'),{type:'line',
-    data:{labels:trendLabels,datasets:[{label:'Signed value',data:seq.map(r=>r.signed),
-      borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:seq.length>60?0:2,borderWidth:2}]},
-    options:baseOpts()});
-  $('trendSub').textContent = S.hasDate? 'Signed value per transaction over time (credits +, debits −)':'Signed value per transaction in sequence (credits +, debits −)';
+  if(S.hasDate){
+    // sum signed value (credits +, debits −) per calendar year
+    const yv={}; rows.forEach(r=>{ if(r.date){ const y=r.date.getFullYear(); yv[y]=(yv[y]||0)+r.signed; } });
+    const ye=Object.entries(yv).sort((a,b)=>a[0]<b[0]?-1:1);
+    S.charts.trend=new Chart($('chTrend'),{type:'line',
+      data:{labels:ye.map(e=>e[0]),datasets:[{label:'Net value',data:ye.map(e=>e[1]),
+        borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:4,borderWidth:2}]},
+      options:baseOpts()});
+    $('trendSub').textContent='Net signed value per year (credits +, debits −)';
+  }else{
+    const trendLabels=seq.map((r,i)=> (i+1));
+    S.charts.trend=new Chart($('chTrend'),{type:'line',
+      data:{labels:trendLabels,datasets:[{label:'Signed value',data:seq.map(r=>r.signed),
+        borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:seq.length>60?0:2,borderWidth:2}]},
+      options:baseOpts()});
+    $('trendSub').textContent='Signed value per transaction in sequence — add a Transaction Date column to view it per year';
+  }
 
   /* 4. Daily count  OR  per-type count fallback */
   if(S.hasDate){
