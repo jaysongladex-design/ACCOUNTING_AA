@@ -665,15 +665,14 @@ function agg(rows){
 function renderKPIs(){
   const a=agg(S.filtered);
   const cur=a.currency? a.currency+' ':'';
+  const debitCount=S.filtered.filter(r=>r.flow==='Debit').length;
   const cards=[
-    {label:'Total Transactions',value:fmtInt(a.count),cls:''},
+    {label:'Total Debit Transactions',value:fmtInt(debitCount),cls:'debit',sub:'Count of debit transactions only'},
     {label:'Total Debit Amount',value:cur+money(a.debitSum),cls:'debit',sub:'Money out'},
     {label:'Total Credit Amount',value:cur+money(a.creditSum),cls:'credit',sub:'Money in'},
     {label:'Net Amount',value:cur+fmtCur(a.net),cls:a.net>=0?'credit':'debit',sub:'Credits − Debits'},
     {label:'Current Wallet Balance',value:cur+money(a.wallet||0),cls:'accent',sub:S.cols.balance?'From Remaining Balance':'Computed running'},
-    {label:'Average Transaction',value:cur+money(a.avg),cls:'',sub:'Mean abs. value'},
-    {label:'Largest Debit',value:cur+money(a.largestDebit),cls:'debit'},
-    {label:'Largest Credit',value:cur+money(a.largestCredit),cls:'credit'},
+    {label:'Average Transaction Value',value:cur+money(a.avg),cls:'',sub:'Mean value per transaction'},
     {label:'Number of Users',value:fmtInt(a.users),cls:''},
     {label:'Transaction Types',value:fmtInt(a.types),cls:''},
   ];
@@ -770,7 +769,25 @@ function renderCharts(){
       {label:'Credits',data:yrs.map(y=>byYear[y].credit),backgroundColor:GREEN,borderRadius:4},
       {label:'Debits', data:yrs.map(y=>byYear[y].debit), backgroundColor:AA_RED,borderRadius:4}
     ]},
-    options:baseOpts()});
+    options:baseOpts(),
+    plugins:[{
+      id:'barValueLabels',
+      afterDatasetsDraw(chart){
+        const ctx=chart.ctx;
+        const compact=x=>{x=Math.abs(x);return x>=1e6?(x/1e6).toFixed(2)+'M':x>=1e3?(x/1e3).toFixed(0)+'K':String(Math.round(x));};
+        ctx.save(); ctx.font='bold 11px Segoe UI, sans-serif'; ctx.textAlign='center';
+        chart.data.datasets.forEach((ds,di)=>{
+          chart.getDatasetMeta(di).data.forEach((bar,i)=>{
+            const v=ds.data[i]; if(!v)return;
+            const inside=(bar.base-bar.y)>22;
+            ctx.fillStyle=inside?'#fff':tickColor();
+            ctx.textBaseline=inside?'top':'bottom';
+            ctx.fillText(compact(v), bar.x, inside?bar.y+4:bar.y-3);
+          });
+        });
+        ctx.restore();
+      }
+    }]});
   $('trendSub').textContent = S.hasDate? 'Total Credits vs Debits per year':'Total Credits vs Debits (upload the dated file to split by year)';
 
   /* Daily, Monthly, Top-Users (amount & count), Wallet Balance, Running Balance,
