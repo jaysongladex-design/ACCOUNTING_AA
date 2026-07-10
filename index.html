@@ -251,10 +251,6 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <div class="section-title">Filters</div>
     <div class="filters" id="filters">
       <div class="field" id="fld-year"><label>Year</label><select id="fYear"></select></div>
-      <div class="field" id="fld-date"><label>Date From</label>
-        <input type="date" id="fDateFrom"></div>
-      <div class="field" id="fld-date2"><label>Date To</label>
-        <input type="date" id="fDateTo"></div>
       <div class="field"><label>User Code</label><select id="fUser"></select></div>
       <div class="field"><label>Transaction Type</label><select id="fType"></select></div>
       <div class="field"><label>Category</label><select id="fCategory"></select></div>
@@ -583,17 +579,7 @@ function buildFilterOptions(){
   }
   yearField.classList.remove('hidden');
 
-  const dateFields=[$('fld-date'),$('fld-date2')];
-  if(S.hasDate){
-    const ds=S.raw.filter(r=>r.date).map(r=>r.date);
-    const min=new Date(Math.min(...ds)), max=new Date(Math.max(...ds));
-    $('fDateFrom').value=dayKey(min); $('fDateTo').value=dayKey(max);
-    $('fDateFrom').min=dayKey(min); $('fDateFrom').max=dayKey(max);
-    $('fDateTo').min=dayKey(min); $('fDateTo').max=dayKey(max);
-    dateFields.forEach(f=>f.classList.remove('hidden'));
-  }else{
-    dateFields.forEach(f=>f.classList.add('hidden'));
-  }
+  // Date From / Date To filters removed per request.
 }
 
 function showDateNotice(){
@@ -613,19 +599,12 @@ function showDateNotice(){
 function applyFilters(){
   const u=$('fUser').value, t=$('fType').value, cat=$('fCategory').value,
         fl=$('fFlow').value, yr=$('fYear').value;
-  let from=null,to=null;
-  if(S.hasDate){
-    from=$('fDateFrom').value?new Date($('fDateFrom').value+'T00:00:00'):null;
-    to=$('fDateTo').value?new Date($('fDateTo').value+'T23:59:59'):null;
-  }
   S.filtered=S.raw.filter(r=>{
     if(u&&r.user!==u)return false;
     if(t&&r.type!==t)return false;
     if(cat&&r.category!==cat)return false;
     if(fl&&r.flow!==fl)return false;
     if(yr&&S.hasDate&&(!r.date||r.date.getFullYear()!=yr))return false;
-    if(from&&(!r.date||r.date<from))return false;
-    if(to&&(!r.date||r.date>to))return false;
     return true;
   });
   $('filterCount').textContent=`${fmtInt(S.filtered.length)} of ${fmtInt(S.raw.length)} transactions`;
@@ -675,11 +654,9 @@ function renderKPIs(){
     {label:'Total Debit Transactions',value:fmtInt(debitCount),cls:'debit',sub:'Count of debit transactions only'},
     {label:'Total Debit Amount',value:cur+money(a.debitSum),cls:'debit',sub:'Money out'},
     {label:'Total Credit Amount',value:cur+money(a.creditSum),cls:'credit',sub:'Money in'},
-    {label:'Net Amount',value:cur+fmtCur(a.net),cls:a.net>=0?'credit':'debit',sub:'Credits − Debits'},
     {label:'Current Wallet Balance',value:cur+money(a.wallet||0),cls:'accent',sub:S.cols.balance?'From Remaining Balance':'Computed running'},
     {label:'Average Transaction Value',value:cur+money(a.avg),cls:'',sub:'Mean value per transaction'},
     {label:'Number of Users',value:fmtInt(a.users),cls:''},
-    {label:'Transaction Types',value:fmtInt(a.types),cls:''},
   ];
   $('kpiGrid').innerHTML=cards.map(c=>`
     <div class="kpi ${c.cls}">
@@ -909,7 +886,6 @@ const dz=$('dropzone');
 dz.addEventListener('drop',e=>{ if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]); });
 
 ['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).onchange=applyFilters);
-['fDateFrom','fDateTo'].forEach(id=>$(id).onchange=applyFilters);
 $('resetFilters').onclick=()=>{
   ['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).value='');
   buildFilterOptions();
