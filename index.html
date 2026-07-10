@@ -250,7 +250,6 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <!-- FILTERS -->
     <div class="section-title">Filters</div>
     <div class="filters" id="filters">
-      <div class="field" id="fld-year"><label>Year</label><select id="fYear"></select></div>
       <div class="field" id="fld-date"><label>Date From</label>
         <input type="date" id="fDateFrom"></div>
       <div class="field" id="fld-date2"><label>Date To</label>
@@ -572,21 +571,7 @@ function buildFilterOptions(){
     catField.classList.add('hidden');
   }
 
-  // Year filter (from real dates only)
-  const yearField=$('fld-year');
-  const years=[...new Set(S.raw.filter(r=>r.date).map(r=>r.date.getFullYear()))].sort();
-  if(S.hasDate && years.length){
-    $('fYear').disabled=false;
-    $('fYear').innerHTML=`<option value="">All Years</option>`+years.map(y=>`<option value="${y}">${y}</option>`).join('');
-    yearField.classList.remove('hidden');
-  }else{
-    // No date column in the data — still show selectable Year choices.
-    // (These won't actually filter rows until the uploaded file has a date column.)
-    $('fYear').disabled=false;
-    const staticYears=[2022,2023,2024,2025,2026];
-    $('fYear').innerHTML=`<option value="">All Years</option>`+staticYears.map(y=>`<option value="${y}">${y}</option>`).join('');
-    yearField.classList.remove('hidden');
-  }
+  // Year filter removed — this dataset has no usable date column, so it can't filter by year.
 
   const dateFields=[$('fld-date'),$('fld-date2')];
   if(S.hasDate){
@@ -617,8 +602,7 @@ function showDateNotice(){
 ============================================================ */
 function applyFilters(){
   const u=$('fUser').value, t=$('fType').value, c=$('fCurrency').value,
-        a=$('fAgency').value, fl=$('fFlow').value, cat=$('fCategory').value,
-        yr=$('fYear').value;
+        a=$('fAgency').value, fl=$('fFlow').value, cat=$('fCategory').value;
   let from=null,to=null;
   if(S.hasDate){
     from=$('fDateFrom').value?new Date($('fDateFrom').value+'T00:00:00'):null;
@@ -631,7 +615,6 @@ function applyFilters(){
     if(c&&r.currency!==c)return false;
     if(a&&String(r.agency)!==a)return false;
     if(fl&&r.flow!==fl)return false;
-    if(yr&&S.hasDate&&(!r.date||r.date.getFullYear()!=yr))return false;
     if(from&&(!r.date||r.date<from))return false;
     if(to&&(!r.date||r.date>to))return false;
     return true;
@@ -776,25 +759,14 @@ function renderCharts(){
 
   /* "Transaction Distribution" chart removed per request. */
 
-  /* 3. Transaction Value Trend — grouped PER YEAR when dates exist, else per-transaction sequence */
+  /* 3. Transaction Value Trend (signed, sequence or date) */
   const seq=[...rows].sort((a,b)=> S.hasDate&&a.date&&b.date? a.date-b.date : a._i-b._i);
-  if(S.hasDate){
-    // sum signed value (credits +, debits −) per calendar year
-    const yv={}; rows.forEach(r=>{ if(r.date){ const y=r.date.getFullYear(); yv[y]=(yv[y]||0)+r.signed; } });
-    const ye=Object.entries(yv).sort((a,b)=>a[0]<b[0]?-1:1);
-    S.charts.trend=new Chart($('chTrend'),{type:'line',
-      data:{labels:ye.map(e=>e[0]),datasets:[{label:'Net value',data:ye.map(e=>e[1]),
-        borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:4,borderWidth:2}]},
-      options:baseOpts()});
-    $('trendSub').textContent='Net signed value per year (credits +, debits −)';
-  }else{
-    const trendLabels=seq.map((r,i)=> (i+1));
-    S.charts.trend=new Chart($('chTrend'),{type:'line',
-      data:{labels:trendLabels,datasets:[{label:'Signed value',data:seq.map(r=>r.signed),
-        borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:seq.length>60?0:2,borderWidth:2}]},
-      options:baseOpts()});
-    $('trendSub').textContent='Signed value per transaction in sequence — add a Transaction Date column to view it per year';
-  }
+  const trendLabels=seq.map((r,i)=> S.hasDate&&r.date? dayKey(r.date) : (i+1));
+  S.charts.trend=new Chart($('chTrend'),{type:'line',
+    data:{labels:trendLabels,datasets:[{label:'Signed value',data:seq.map(r=>r.signed),
+      borderColor:AA_RED,backgroundColor:'rgba(238,28,37,.10)',fill:true,tension:.25,pointRadius:seq.length>60?0:2,borderWidth:2}]},
+    options:baseOpts()});
+  $('trendSub').textContent = S.hasDate? 'Signed value per transaction over time (credits +, debits −)':'Signed value per transaction in sequence (credits +, debits −)';
 
   /* 4. Daily count  OR  per-type count fallback */
   if(S.hasDate){
@@ -978,10 +950,10 @@ const dz=$('dropzone');
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
 dz.addEventListener('drop',e=>{ if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]); });
 
-['fUser','fType','fCategory','fCurrency','fAgency','fFlow','fYear'].forEach(id=>$(id).onchange=applyFilters);
+['fUser','fType','fCategory','fCurrency','fAgency','fFlow'].forEach(id=>$(id).onchange=applyFilters);
 ['fDateFrom','fDateTo'].forEach(id=>$(id).onchange=applyFilters);
 $('resetFilters').onclick=()=>{
-  ['fUser','fType','fCategory','fCurrency','fAgency','fFlow','fYear'].forEach(id=>$(id).value='');
+  ['fUser','fType','fCategory','fCurrency','fAgency','fFlow'].forEach(id=>$(id).value='');
   buildFilterOptions();
   applyFilters();
 };
