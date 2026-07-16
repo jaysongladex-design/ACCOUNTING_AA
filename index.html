@@ -932,7 +932,7 @@ function exportExcel(){
   const out=rows.map(r=>({
     'Agency Code':r.agency,'AccountTransactionType':r.type,'Reference':r.ref,
     'CurrencyCode':r.currency,'Value':r.value,'User Code':r.user,
-    'Remaining Balance':r.balance,
+    'Remaining Balance':(r.balance!=null? r.balance : r.running),
     ...(S.hasCategory?{'Category':r.category}:{}),
     'Flow':r.flow,
     ...(S.hasDate?{'Transaction Date':r.date?dayKey(r.date):''}:{})
