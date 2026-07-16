@@ -301,7 +301,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
       <div class="update-hint">
         <b>Required columns:</b> Agency Code · AccountTransactionType · Reference · CurrencyCode · Value · User Code · Remaining Balance · Category · TransactionDate<br>
         <b>Value:</b> use a <span class="debit-color">negative</span> number for debits (money out) and a <span class="credit-color">positive</span> number for credits (money in).
-        <b>TransactionDate:</b> a real date, e.g. <b>2026-07-01</b>.
+        <b>TransactionDate:</b> a real date — the template's example rows are pre-filled with your last covered day (<b id="tplLastDay">—</b>), so just carry on from there.
       </div>
     </div>
 
@@ -343,7 +343,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
 
   <footer>
     AirAsia Agency Account Transaction Dashboard • Built with Chart.js &amp; SheetJS • All processing happens locally in your browser.<br>
-    <b style="color:var(--aa-red)">BUILD v8</b> — latest: "Data as of" badge, Date From/To range filters, and the Update Data panel.
+    <b style="color:var(--aa-red)">BUILD v9</b> — latest: "Data as of" badge, Date From/To range filters, Update Data panel (template uses your last covered day).
   </footer>
 </div>
 
@@ -712,9 +712,11 @@ function renderKPIs(){
   const debitCount=S.filtered.filter(r=>r.flow==='Debit').length;
   // "Data as of" status badge — the last day the underlying data covers
   const allDates=S.raw.filter(r=>r.date).map(r=>r.date);
-  $('dataAsOf').innerHTML = allDates.length
-    ? `Data as of <b>${new Date(Math.max(...allDates)).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</b>`
+  const lastDay = allDates.length? new Date(Math.max(...allDates)) : null;
+  $('dataAsOf').innerHTML = lastDay
+    ? `Data as of <b>${lastDay.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</b>`
     : 'No dates in data';
+  if($('tplLastDay')) $('tplLastDay').textContent = lastDay? dayKey(lastDay) : '—';
   const cards=[
     {label:'Total Debit Transactions',value:fmtInt(debitCount),cls:'debit',sub:'Count of debit transactions only'},
     {label:'Total Debit Amount',value:cur+money(a.debitSum),cls:'debit',sub:'Money out'},
@@ -942,9 +944,15 @@ function exportExcel(){
 /* ---------- UPDATE TEMPLATE ---------- */
 // Excel template with the exact headers the dashboard reads, plus two example rows to copy.
 function downloadTemplate(){
+  // Sample rows carry the LAST day the current data covers, so you can see exactly where to continue from.
+  const allDates=S.raw.filter(r=>r.date).map(r=>r.date);
+  const lastDay = allDates.length? dayKey(new Date(Math.max(...allDates))) : dayKey(new Date());
+  // Match the agency / currency already in the data so the example fits your file.
+  const agency = (S.raw[0] && S.raw[0].agency) || 'PHGLADEXTR';
+  const curr   = (S.raw[0] && S.raw[0].currency) || 'PHP';
   const sample=[
-    {'Agency Code':'PHGLADEXTR','AccountTransactionType':'PPAccountDebitForPayment','Reference':'ABC123','CurrencyCode':'PHP','Value':-12345.67,'User Code':'BO_SAMPLE','Remaining Balance':487654.33,'Category':'BOOKING','TransactionDate':'2026-07-01'},
-    {'Agency Code':'PHGLADEXTR','AccountTransactionType':'PPAccountCredit','Reference':'PHGLADEXTR','CurrencyCode':'PHP','Value':500000,'User Code':'1040602','Remaining Balance':987654.33,'Category':'TOP UP','TransactionDate':'2026-07-02'}
+    {'Agency Code':agency,'AccountTransactionType':'PPAccountDebitForPayment','Reference':'ABC123','CurrencyCode':curr,'Value':-12345.67,'User Code':'BO_SAMPLE','Remaining Balance':487654.33,'Category':'BOOKING','TransactionDate':lastDay},
+    {'Agency Code':agency,'AccountTransactionType':'PPAccountCredit','Reference':agency,'CurrencyCode':curr,'Value':500000,'User Code':'1040602','Remaining Balance':987654.33,'Category':'TOP UP','TransactionDate':lastDay}
   ];
   const ws=XLSX.utils.json_to_sheet(sample);
   ws['!cols']=[{wch:14},{wch:28},{wch:12},{wch:13},{wch:14},{wch:14},{wch:18},{wch:12},{wch:16}];
