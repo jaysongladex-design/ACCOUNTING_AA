@@ -301,7 +301,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
       <div class="update-hint">
         <b>Required columns:</b> AccountReference · TransactionDate · AccountTransactionType · Reference · CurrencyCode · Amount · CreatedUserCode &nbsp;<i>(Category is optional; organizationname, ACAmount, available, ForeignCurrencyCode, ForeignAmount and Note are kept but ignored)</i><br>
         <b>Amount:</b> use a <span class="debit-color">negative</span> number for debits (money out) and a <span class="credit-color">positive</span> number for credits (money in).<br>
-        <b>No Remaining Balance needed</b> — the running balance is calculated automatically from Amount.<br>
+        <b>No Remaining Balance needed</b> — the running balance is calculated automatically from Amount, starting from the opening wallet balance of <b>PHP 819,190.79</b>.<br>
         <b>TransactionDate:</b> a real date — the template's example rows are pre-filled with your last covered day (<b id="tplLastDay">—</b>), so just carry on from there.
       </div>
     </div>
@@ -344,7 +344,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
 
   <footer>
     AirAsia Agency Account Transaction Dashboard • Built with Chart.js &amp; SheetJS • All processing happens locally in your browser.<br>
-    <b style="color:var(--aa-red)">BUILD v10</b> — latest: template matches the raw MB Report export format; running balance auto-computed from Amount.
+    <b style="color:var(--aa-red)">BUILD v11</b> — latest: running balance computed from Amount, seeded with the PHP 819,190.79 opening balance.
   </footer>
 </div>
 
@@ -371,6 +371,11 @@ const S = {
 const AA_RED='#ee1c25', AA_RED2='#ff6a70', GREEN='#1a9c66', GREENL='#35c98a',
       GRAY='#5b6470', DARK='#2b2f36';
 const PALETTE=['#ee1c25','#ff8a3d','#2f7ed8','#1a9c66','#8e44ad','#f0a500','#00a0a8','#e0518a','#5b6470','#c40e14','#3aa0ff','#7bc043'];
+
+// Wallet balance BEFORE the first transaction in the data. Used to seed the running
+// balance when an uploaded file has no balance column. Change this if your data
+// starts from a different opening balance.
+const OPENING_BALANCE = 819190.79;
 
 /* ============================================================
    HELPERS
@@ -585,7 +590,13 @@ function detectCreditDebit(){
 }
 
 function computeRunning(){
-  let run=0;
+  // Seed with the wallet balance that existed BEFORE the first transaction.
+  // If the file carries balances we can derive it exactly; otherwise use OPENING_BALANCE.
+  const first=S.raw[0];
+  let open=OPENING_BALANCE;
+  if(first && first.balance!=null) open=first.balance-first.signed;
+  S.openingBalance=open;
+  let run=open;
   S.raw.forEach(r=>{ run+=r.signed; r.running=run; });
 }
 
@@ -722,7 +733,7 @@ function renderKPIs(){
     {label:'Total Debit Transactions',value:fmtInt(debitCount),cls:'debit',sub:'Count of debit transactions only'},
     {label:'Total Debit Amount',value:cur+money(a.debitSum),cls:'debit',sub:'Money out'},
     {label:'Total Credit Amount',value:cur+money(a.creditSum),cls:'credit',sub:'Money in'},
-    {label:'Current Wallet Balance',value:cur+money(a.wallet||0),cls:'accent',sub:S.cols.balance?'From Remaining Balance':'Computed running'},
+    {label:'Current Wallet Balance',value:cur+money(a.wallet||0),cls:'accent',sub:S.cols.balance?'From Remaining Balance':'From Amount · opening '+money(S.openingBalance||0)},
     {label:'Average Transaction Value',value:cur+money(a.avg),cls:'',sub:'Mean value per transaction'},
     {label:'Number of Users',value:fmtInt(a.users),cls:''},
   ];
