@@ -344,7 +344,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
 
   <footer>
     AirAsia Agency Account Transaction Dashboard • Built with Chart.js &amp; SheetJS • All processing happens locally in your browser.<br>
-    <b style="color:var(--aa-red)">BUILD v11</b> — latest: running balance computed from Amount, seeded with the PHP 819,190.79 opening balance.
+    <b style="color:var(--aa-red)">BUILD v12</b> — latest: fixed 1899 dates (time-only cells are no longer mistaken for dates).
   </footer>
 </div>
 
@@ -476,6 +476,9 @@ function ingestAOA(aoa){
 
   const rows=[];
   let currentDate=null, sawDate=false;   // day-grouped reports put the date on its own "day-header" row
+  // A usable date must be a REAL calendar date. Excel turns time-only cells (e.g. "32:26.8")
+  // into 1899-12-30 + time, so anything at/below 1900 is a time value — never a date.
+  const okDate=d=> d instanceof Date && !isNaN(d.getTime()) && d.getFullYear()>1900;
   for(let i=best.row+1;i<aoa.length;i++){
     const r=aoa[i];
     if(!r||!r.length)continue;
@@ -488,16 +491,18 @@ function ingestAOA(aoa){
     const hasVal = !(rawVal===''||rawVal==null||isNaN(parseFloat(String(rawVal).replace(/[^0-9.\-]/g,''))));
     const hasAgency = !(agency===''||agency==null);
     if(!hasVal || !hasAgency){
-      // Not a transaction. If it carries a real Date it's a day-header row — remember it for the rows below.
-      const dCell=r.find(c=> c instanceof Date && !isNaN(c.getTime()));
+      // Not a transaction. If it carries a real date it's a day-header row — remember it for the rows below.
+      const dCell=r.find(c=> okDate(c));
       if(dCell){ currentDate=dCell; sawDate=true; }
       continue;
     }
     const val=num(rawVal);
-    // Use this row's OWN date when present (normal template); otherwise inherit the day-header date.
+    // Use this row's OWN date only when it's a real calendar date (flat template);
+    // otherwise inherit the day-header date (day-grouped MB Report).
     const own = C.date!=null? parseDate(r[C.date]) : null;
-    if(own) sawDate=true;
-    const dt = own || currentDate;
+    const ownOk = okDate(own);
+    if(ownOk) sawDate=true;
+    const dt = ownOk? own : currentDate;
     rows.push({
       _i:rows.length,
       agency: agency,
