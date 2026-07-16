@@ -100,6 +100,18 @@ header{
 .section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.4px;
   color:var(--text-soft);margin:34px 0 14px;display:flex;align-items:center;gap:10px}
 .section-title::before{content:"";width:5px;height:16px;background:var(--aa-red);border-radius:3px;display:inline-block}
+.as-of{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;font-size:12px;
+  background:var(--light-gray);color:var(--text);border:1px solid var(--border);
+  border-radius:999px;padding:4px 12px;white-space:nowrap}
+.as-of b{color:var(--aa-red)}
+.update-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow)}
+.update-steps{font-size:13.5px;color:var(--text)}
+.update-steps ol{margin:8px 0 0 20px}
+.update-steps li{padding:3px 0;color:var(--text-soft)}
+.update-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 12px}
+.update-hint{font-size:12px;color:var(--text-soft);line-height:1.7;
+  border-top:1px solid var(--border);padding-top:12px}
 
 /* KPI cards */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px}
@@ -244,13 +256,15 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <div id="dateNotice" class="notice hidden"></div>
 
     <!-- KPI CARDS -->
-    <div class="section-title">Executive KPIs</div>
+    <div class="section-title">Executive KPIs <span class="as-of" id="dataAsOf"></span></div>
     <div class="kpi-grid" id="kpiGrid"></div>
 
     <!-- FILTERS -->
     <div class="section-title">Filters</div>
     <div class="filters" id="filters">
       <div class="field" id="fld-year"><label>Year</label><select id="fYear"></select></div>
+      <div class="field" id="fld-date"><label>Date From</label><input type="date" id="fDateFrom"></div>
+      <div class="field" id="fld-date2"><label>Date To</label><input type="date" id="fDateTo"></div>
       <div class="field"><label>User Code</label><select id="fUser"></select></div>
       <div class="field"><label>Transaction Type</label><select id="fType"></select></div>
       <div class="field"><label>Category</label><select id="fCategory"></select></div>
@@ -267,6 +281,28 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
     <div class="section-title">Visual Analytics</div>
     <div class="chart-grid">
       <div class="chart-card wide"><h3>Transaction Value by Year &amp; Flow</h3><div class="chart-sub" id="trendSub">Total Credits vs Debits per year</div><div class="chart-wrap"><canvas id="chTrend"></canvas></div></div>
+    </div>
+
+    <!-- UPDATE DATA -->
+    <div class="section-title">Update Data</div>
+    <div class="update-card">
+      <div class="update-steps">
+        <b>To update this dashboard with new transactions:</b>
+        <ol>
+          <li><b>Download</b> the Excel template below — it already has the exact columns required.</li>
+          <li><b>Fill it in</b> — one row per transaction (keep the header row as-is).</li>
+          <li><b>Upload</b> the completed file — the dashboard rebuilds instantly from it.</li>
+        </ol>
+      </div>
+      <div class="update-actions">
+        <button class="btn solid small" id="dlTemplate">⬇ Download Excel Template</button>
+        <button class="btn ghost small" id="uploadUpdate">⬆ Upload Updated File</button>
+      </div>
+      <div class="update-hint">
+        <b>Required columns:</b> Agency Code · AccountTransactionType · Reference · CurrencyCode · Value · User Code · Remaining Balance · Category · TransactionDate<br>
+        <b>Value:</b> use a <span class="debit-color">negative</span> number for debits (money out) and a <span class="credit-color">positive</span> number for credits (money in).
+        <b>TransactionDate:</b> a real date, e.g. <b>2026-07-01</b>.
+      </div>
     </div>
 
     <!-- INSIGHTS -->
@@ -307,7 +343,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
 
   <footer>
     AirAsia Agency Account Transaction Dashboard • Built with Chart.js &amp; SheetJS • All processing happens locally in your browser.<br>
-    <b style="color:var(--aa-red)">BUILD v7</b> — latest: no Date From/To filters, no Net Amount / Transaction Types cards.
+    <b style="color:var(--aa-red)">BUILD v8</b> — latest: "Data as of" badge, Date From/To range filters, and the Update Data panel.
   </footer>
 </div>
 
@@ -433,24 +469,29 @@ function ingestAOA(aoa){
   S.hasCategory = C.category!=null;
 
   const rows=[];
-  let currentDate=null, sawDate=false;   // the day's date sits on its own "day-header" row — carry it down
+  let currentDate=null, sawDate=false;   // day-grouped reports put the date on its own "day-header" row
   for(let i=best.row+1;i<aoa.length;i++){
     const r=aoa[i];
     if(!r||!r.length)continue;
-    // Day-header row: holds a real Date (e.g. 1-Jul-2023). Remember it for the transactions beneath it.
-    const dCell=r.find(c=> c instanceof Date && !isNaN(c.getTime()));
-    if(dCell){ currentDate=dCell; sawDate=true; continue; }
     // skip repeated header rows
     const sig=r.map(c=>norm(c)).filter(Boolean);
     if(sig.length && sig.every(v=>headerSig.has(v)) && sig.length>2) continue;
+    // A real transaction needs BOTH an agency and a numeric value.
     const rawVal = C.value!=null? r[C.value] : '';
-    const val=num(rawVal);
-    // require a numeric, non-empty value to count as a real transaction
-    if(rawVal===''||rawVal==null||isNaN(parseFloat(String(rawVal).replace(/[^0-9.\-]/g,''))))continue;
     const agency = C.agency!=null? r[C.agency] : '';
-    if(agency===''||agency==null)continue;
-    // Prefer the carried-down day date; fall back to a real date in a date column if present.
-    const dt = currentDate || (C.date!=null? parseDate(r[C.date]) : null);
+    const hasVal = !(rawVal===''||rawVal==null||isNaN(parseFloat(String(rawVal).replace(/[^0-9.\-]/g,''))));
+    const hasAgency = !(agency===''||agency==null);
+    if(!hasVal || !hasAgency){
+      // Not a transaction. If it carries a real Date it's a day-header row — remember it for the rows below.
+      const dCell=r.find(c=> c instanceof Date && !isNaN(c.getTime()));
+      if(dCell){ currentDate=dCell; sawDate=true; }
+      continue;
+    }
+    const val=num(rawVal);
+    // Use this row's OWN date when present (normal template); otherwise inherit the day-header date.
+    const own = C.date!=null? parseDate(r[C.date]) : null;
+    if(own) sawDate=true;
+    const dt = own || currentDate;
     rows.push({
       _i:rows.length,
       agency: agency,
@@ -580,7 +621,18 @@ function buildFilterOptions(){
   }
   yearField.classList.remove('hidden');
 
-  // Date From / Date To filters removed per request.
+  // Date From / Date To range filters (start date -> end date)
+  const dateFields=[$('fld-date'),$('fld-date2')];
+  if(S.hasDate){
+    const ds=S.raw.filter(r=>r.date).map(r=>r.date);
+    const min=new Date(Math.min(...ds)), max=new Date(Math.max(...ds));
+    $('fDateFrom').value=dayKey(min); $('fDateTo').value=dayKey(max);
+    $('fDateFrom').min=dayKey(min);   $('fDateFrom').max=dayKey(max);
+    $('fDateTo').min=dayKey(min);     $('fDateTo').max=dayKey(max);
+    dateFields.forEach(f=>f.classList.remove('hidden'));
+  }else{
+    dateFields.forEach(f=>f.classList.add('hidden'));
+  }
 }
 
 function showDateNotice(){
@@ -600,12 +652,19 @@ function showDateNotice(){
 function applyFilters(){
   const u=$('fUser').value, t=$('fType').value, cat=$('fCategory').value,
         fl=$('fFlow').value, yr=$('fYear').value;
+  let from=null,to=null;
+  if(S.hasDate){
+    from=$('fDateFrom').value?new Date($('fDateFrom').value+'T00:00:00'):null;
+    to=$('fDateTo').value?new Date($('fDateTo').value+'T23:59:59'):null;
+  }
   S.filtered=S.raw.filter(r=>{
     if(u&&r.user!==u)return false;
     if(t&&r.type!==t)return false;
     if(cat&&r.category!==cat)return false;
     if(fl&&r.flow!==fl)return false;
     if(yr&&S.hasDate&&(!r.date||r.date.getFullYear()!=yr))return false;
+    if(from&&(!r.date||r.date<from))return false;
+    if(to&&(!r.date||r.date>to))return false;
     return true;
   });
   $('filterCount').textContent=`${fmtInt(S.filtered.length)} of ${fmtInt(S.raw.length)} transactions`;
@@ -651,6 +710,11 @@ function renderKPIs(){
   const a=agg(S.filtered);
   const cur=a.currency? a.currency+' ':'';
   const debitCount=S.filtered.filter(r=>r.flow==='Debit').length;
+  // "Data as of" status badge — the last day the underlying data covers
+  const allDates=S.raw.filter(r=>r.date).map(r=>r.date);
+  $('dataAsOf').innerHTML = allDates.length
+    ? `Data as of <b>${new Date(Math.max(...allDates)).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</b>`
+    : 'No dates in data';
   const cards=[
     {label:'Total Debit Transactions',value:fmtInt(debitCount),cls:'debit',sub:'Count of debit transactions only'},
     {label:'Total Debit Amount',value:cur+money(a.debitSum),cls:'debit',sub:'Money out'},
@@ -875,6 +939,20 @@ function exportExcel(){
   XLSX.writeFile(wb,'AirAsia_Filtered_Transactions.xlsx');
 }
 
+/* ---------- UPDATE TEMPLATE ---------- */
+// Excel template with the exact headers the dashboard reads, plus two example rows to copy.
+function downloadTemplate(){
+  const sample=[
+    {'Agency Code':'PHGLADEXTR','AccountTransactionType':'PPAccountDebitForPayment','Reference':'ABC123','CurrencyCode':'PHP','Value':-12345.67,'User Code':'BO_SAMPLE','Remaining Balance':487654.33,'Category':'BOOKING','TransactionDate':'2026-07-01'},
+    {'Agency Code':'PHGLADEXTR','AccountTransactionType':'PPAccountCredit','Reference':'PHGLADEXTR','CurrencyCode':'PHP','Value':500000,'User Code':'1040602','Remaining Balance':987654.33,'Category':'TOP UP','TransactionDate':'2026-07-02'}
+  ];
+  const ws=XLSX.utils.json_to_sheet(sample);
+  ws['!cols']=[{wch:14},{wch:28},{wch:12},{wch:13},{wch:14},{wch:14},{wch:18},{wch:12},{wch:16}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Transactions');
+  XLSX.writeFile(wb,'AirAsia_Dashboard_Template.xlsx');
+}
+
 /* ============================================================
    EVENTS
 ============================================================ */
@@ -887,11 +965,16 @@ const dz=$('dropzone');
 dz.addEventListener('drop',e=>{ if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]); });
 
 ['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).onchange=applyFilters);
+['fDateFrom','fDateTo'].forEach(id=>$(id).onchange=applyFilters);
 $('resetFilters').onclick=()=>{
   ['fYear','fUser','fType','fCategory','fFlow'].forEach(id=>$(id).value='');
-  buildFilterOptions();
+  buildFilterOptions();   // also restores the full Date From / Date To range
   applyFilters();
 };
+
+/* Update Data panel */
+$('dlTemplate').onclick=downloadTemplate;
+$('uploadUpdate').onclick=()=>$('fileInput').click();
 
 /* Column show/hide editor */
 $('colEditBtn').onclick=(e)=>{ e.stopPropagation(); $('colMenu').classList.toggle('hidden'); };
