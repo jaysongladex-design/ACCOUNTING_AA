@@ -299,8 +299,9 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
         <button class="btn ghost small" id="uploadUpdate">⬆ Upload Updated File</button>
       </div>
       <div class="update-hint">
-        <b>Required columns:</b> Agency Code · AccountTransactionType · Reference · CurrencyCode · Value · User Code · Remaining Balance · Category · TransactionDate<br>
-        <b>Value:</b> use a <span class="debit-color">negative</span> number for debits (money out) and a <span class="credit-color">positive</span> number for credits (money in).
+        <b>Required columns:</b> AccountReference · TransactionDate · AccountTransactionType · Reference · CurrencyCode · Amount · CreatedUserCode &nbsp;<i>(Category is optional; organizationname, ACAmount, available, ForeignCurrencyCode, ForeignAmount and Note are kept but ignored)</i><br>
+        <b>Amount:</b> use a <span class="debit-color">negative</span> number for debits (money out) and a <span class="credit-color">positive</span> number for credits (money in).<br>
+        <b>No Remaining Balance needed</b> — the running balance is calculated automatically from Amount.<br>
         <b>TransactionDate:</b> a real date — the template's example rows are pre-filled with your last covered day (<b id="tplLastDay">—</b>), so just carry on from there.
       </div>
     </div>
@@ -343,7 +344,7 @@ footer{text-align:center;color:var(--text-soft);font-size:12.5px;margin-top:40px
 
   <footer>
     AirAsia Agency Account Transaction Dashboard • Built with Chart.js &amp; SheetJS • All processing happens locally in your browser.<br>
-    <b style="color:var(--aa-red)">BUILD v9</b> — latest: "Data as of" badge, Date From/To range filters, Update Data panel (template uses your last covered day).
+    <b style="color:var(--aa-red)">BUILD v10</b> — latest: template matches the raw MB Report export format; running balance auto-computed from Amount.
   </footer>
 </div>
 
@@ -865,7 +866,8 @@ function visibleCols(){ return activeCols().filter(c=>!S.hiddenCols.has(c.key));
 
 function cellHTML(r,key){
   if(key==='value')  return `<td class="num ${r.flow==='Debit'?'debit-color':'credit-color'}">${fmt(r.value)}</td>`;
-  if(key==='balance')return `<td class="num">${r.balance!=null?fmt(r.balance):'—'}</td>`;
+  // No uploaded balance? Fall back to the running balance computed from Amount.
+  if(key==='balance')return `<td class="num">${r.balance!=null?fmt(r.balance):(r.running!=null?fmt(r.running):'—')}</td>`;
   if(key==='flow')   return `<td><span class="pill ${r.flow==='Credit'?'c':'d'}">${r.flow}</span></td>`;
   if(key==='category')return `<td>${r.category?`<span class="pill cat">${r.category}</span>`:'—'}</td>`;
   return `<td>${r[key]??''}</td>`;
@@ -950,12 +952,15 @@ function downloadTemplate(){
   // Match the agency / currency already in the data so the example fits your file.
   const agency = (S.raw[0] && S.raw[0].agency) || 'PHGLADEXTR';
   const curr   = (S.raw[0] && S.raw[0].currency) || 'PHP';
+  const org    = 'GLADEX TRAVEL SERVICES';
+  // Matches the raw MB Report export layout. No Remaining Balance column —
+  // the running balance is computed from Amount. Category is optional.
   const sample=[
-    {'Agency Code':agency,'AccountTransactionType':'PPAccountDebitForPayment','Reference':'ABC123','CurrencyCode':curr,'Value':-12345.67,'User Code':'BO_SAMPLE','Remaining Balance':487654.33,'Category':'BOOKING','TransactionDate':lastDay},
-    {'Agency Code':agency,'AccountTransactionType':'PPAccountCredit','Reference':agency,'CurrencyCode':curr,'Value':500000,'User Code':'1040602','Remaining Balance':987654.33,'Category':'TOP UP','TransactionDate':lastDay}
+    {'AccountReference':agency,'organizationname':org,'ACCurrencyCode':curr,'ACAmount':'','available':'','TransactionDate':lastDay,'AccountTransactionType':'PPAccountDebitForPayment','Reference':'ABC123','CurrencyCode':curr,'Amount':-12345.67,'ForeignCurrencyCode':'','ForeignAmount':'','Note':'Funds Used: ABC123','CreatedUserCode':'BO_SAMPLE','Category':'BOOKING'},
+    {'AccountReference':agency,'organizationname':org,'ACCurrencyCode':curr,'ACAmount':'','available':'','TransactionDate':lastDay,'AccountTransactionType':'PPAccountCredit','Reference':agency,'CurrencyCode':curr,'Amount':500000,'ForeignCurrencyCode':'','ForeignAmount':'','Note':'Top up','CreatedUserCode':'1040602','Category':'TOP UP'}
   ];
   const ws=XLSX.utils.json_to_sheet(sample);
-  ws['!cols']=[{wch:14},{wch:28},{wch:12},{wch:13},{wch:14},{wch:14},{wch:18},{wch:12},{wch:16}];
+  ws['!cols']=[{wch:16},{wch:24},{wch:15},{wch:11},{wch:10},{wch:15},{wch:26},{wch:12},{wch:13},{wch:14},{wch:19},{wch:14},{wch:22},{wch:16},{wch:12}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Transactions');
   XLSX.writeFile(wb,'AirAsia_Dashboard_Template.xlsx');
